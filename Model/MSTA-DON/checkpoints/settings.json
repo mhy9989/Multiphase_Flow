@@ -1,0 +1,74 @@
+{
+  "setup_config":{
+    "seed": 199989,
+    "diff_seed": false,
+    "per_device_train_batch_size": 16,
+    "per_device_valid_batch_size": 16,
+    "gradient_accumulation_steps": 1,
+    "num_workers": 12,
+    "method": "MSTA",
+    "max_epoch": 1000,
+    "lossfun": "MSE",
+    "load_from": false,
+    "if_continue": false,
+    "regularization": 0.0,
+    "if_display_method_info": true,
+    "mem_log": false,
+    "empty_cache": false,
+    "metrics":["MSE", "RMSE", "MAE", "MRE"],
+    "fps": true
+  },
+  "data_config": {
+    "org_path": "/root/MPF/data-pre/fluidisedBed/data_air/dataset.npy",
+    "input_path": "/root/ML/nc/Model/MSTA-DON/data/AE_inputs.npy",
+    "lam_path": "/root/ML/nc/Model/MSTA-DON/data/AE_lam.npy",
+    "mesh_path": "/root/MPF/data-pre/fluidisedBed/data_air/mesh.npy",
+    "data_num": 1001,
+    "data_width": 128,
+    "data_height": 128,
+    "data_mean": [0.04043254,0.24966112691709627,0.07154969],
+    "data_std": [0.5300521,0.2365436231809009,0.66031325],
+    "data_max": [14.914929,0.5958204334153253,19.28413],
+    "data_min": [-0.1699712,0,-0.16997121],
+    "data_scaler": ["Standard", "MinMax","Standard"],
+    "data_after": 6,
+    "valid_ratio": 0.0,
+    "test_num": 1
+  },
+  "optim_config": {
+    "optim": "Adamw",
+    "lr": 1e-3,
+    "filter_bias_and_bn": false,
+    "log_step": 1,
+    "opt_eps": null,
+    "opt_betas": null,
+    "momentum": 0.9,
+    "weight_decay": 0.01,
+    "early_stop_epoch": -1
+  },
+  "sched_config": {
+    "sched": "onecycle",
+    "decay_rate": 0.1,
+    "decay_epoch": 2000,
+    "lr_k_decay": 1.0,
+    "final_div_factor": 1e4
+  },
+  "model_config": {
+    "model_type": "DON",
+    "model_use": "msta",
+    "hid_S": 16,
+    "hid_T": 128,
+    "N_S": 4,
+    "N_T": 4,
+    "spatio_kernel_enc": 3,
+    "spatio_kernel_dec": 3,
+    "drop_path":0.1,
+    "latent_dim": 1024
+  },
+  "ds_config":{
+    "offload": false,
+    "zero_stage": 0,
+    "gradient_accumulation_steps": 1,
+    "gradient_clipping": 2.0
+}
+}

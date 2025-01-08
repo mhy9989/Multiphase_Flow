@@ -1,0 +1,79 @@
+{
+  "setup_config":{
+    "seed": 199989,
+    "diff_seed": false,
+    "per_device_train_batch_size": 8,
+    "per_device_valid_batch_size": 8,
+    "gradient_accumulation_steps": 1,
+    "num_workers": 12,
+    "method": "l-deeponet",
+    "max_epoch": 2,
+    "lossfun": "MSE",
+    "load_from": false,
+    "if_continue": false,
+    "regularization": 0.0,
+    "if_display_method_info": true,
+    "mem_log": false,
+    "empty_cache": false,
+    "metrics":["MSE", "RMSE", "MAE", "MRE"],
+    "fps": true
+  },
+  "data_config": {
+    "org_path": "/root/MPF/data-pre/fluidisedBed/data-u0.1/dataset.npy",
+    "input_path": "./Model/L_DeepONet-EN_DON-gelu/data/EN_inputs.npy",
+    "lam_path": "./Model/L_DeepONet-EN_DON-gelu/data/AE_lam.npy",
+    "mesh_path": "/root/MPF/data-pre/fluidisedBed/data-u0.1/mesh.npy",
+    "data_num": 1001,
+    "data_width": 128,
+    "data_height": 128,
+    "data_mean": [0.5136139,0.24966112691709627,1.4614624],
+    "data_std": [1.174086,0.2365436231809009,2.3267715],
+    "data_max": [7.619022,0.5958204334153253,19.228542],
+    "data_min": [-0.16997123,0,-0.16997123],
+    "data_scaler": ["Standard", "Standard","Standard"],
+    "data_after": [1,2,3,4,5,6],
+    "valid_ratio": 0.0,
+    "test_num": 1
+  },
+  "optim_config": {
+    "optim": "Adam",
+    "lr": 1e-4,
+    "filter_bias_and_bn": false,
+    "log_step": 1,
+    "opt_eps": null,
+    "opt_betas": null,
+    "momentum": 0.9,
+    "weight_decay": 0.00,
+    "early_stop_epoch": -1
+  },
+  "sched_config": {
+    "sched": "onecycle",
+    "decay_rate": 0.1,
+    "decay_epoch": 2000,
+    "lr_k_decay": 1.0,
+    "final_div_factor": 1e4
+  },
+  "model_config": {
+    "model_type": "EN_DON",
+    "latent_dim": 1024,
+
+    "EN_layers": [1024, 1024, 1024, 1024],
+
+    "branch_channels":[128, 64, 32, 32, 32, 32],
+    "kernel_size": 3,
+    "stride": 1,
+    "act_norm": "Batch",
+    "branch_actfun": "gelu",
+
+    "trunk_layers":[1024,1024,1024,1024],
+    "trunk_actfun": "gelu",
+
+    "p": 8
+  },
+  "ds_config":{
+    "offload": false,
+    "zero_stage": 0,
+    "gradient_accumulation_steps": 1,
+    "gradient_clipping": 2.0
+}
+}
