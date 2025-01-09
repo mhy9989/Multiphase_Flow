@@ -287,12 +287,8 @@ class modeltrain(object):
         self.test_unit(resultsn,metric_list,"Computed",min_max_delt)
 
         # Original
-        if self.args.model_type in ["DON", "EN_DON"]:
-            num = 1
-        else:
-            num = -1
-        if self.scaler[num]:
-            resultsn = self.de_norm(resultsn, self.scaler[num])
+        if self.scaler[1]:
+            resultsn = self.de_norm(resultsn, self.scaler[1])
             resultsn["inputs"] = inputs_org
             self.test_unit(resultsn,metric_list,"Original",min_max_delt)
         return 
