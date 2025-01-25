@@ -36,9 +36,11 @@ class modeltrain(object):
         self.orgs_data=None
 
         self.preparation()
-        print_log(output_namespace(self.args))
-        if self.args.if_display_method_info:
-            self.display_method_info()
+        if self.args.init:
+            print_log(output_namespace(self.args))
+            if self.args.if_display_method_info:
+                self.display_method_info()
+
 
 
     def preparation(self):
@@ -134,7 +136,7 @@ class modeltrain(object):
         H, W = self.args.input_shape
         if self.args.method in ['l-deeponet']:
             input_dummy = torch.ones(1, 1, H, W).to(self.device)
-            if self.args.model_type != "AE":
+            if self.args.model_type not in ["AE", "AE_Conv"]:
                 input_dummy2 = torch.ones(self.args.data_after_num,1).to(self.device)
                 input_dummy = (input_dummy, input_dummy2)
         elif self.args.method in ['msta']:
@@ -162,6 +164,7 @@ class modeltrain(object):
         vali_loss = False
         early_stop = False
         epoch_time_m = AverageMeter()
+
         for epoch in range(self.epoch, self.max_epochs):
             begin = time.time()
 
@@ -286,8 +289,12 @@ class modeltrain(object):
         # Computed
         self.test_unit(resultsn,metric_list,"Computed",min_max_delt)
 
+        if self.args.model_type in ["DON", "EN_DON"]:
+            num = 1
+        else:
+            num = -1
         # Original
-        if self.scaler[1]:
+        if self.scaler[num]:
             resultsn = self.de_norm(resultsn, self.scaler[1])
             resultsn["inputs"] = inputs_org
             self.test_unit(resultsn,metric_list,"Original",min_max_delt)
@@ -306,12 +313,12 @@ class modeltrain(object):
             for np_data in ['metrics', 'inputs', 'labels', 'preds']:
                 np.save(osp.join(folder_path, np_data + '.npy'), results[np_data])
 
-        if self.args.model_type == "AE":
+        if self.args.model_type in ["AE", "AE_Conv"]:
             eval_res_av, eval_log_av = metric(results['preds'], results['labels'],
                                         metrics=metric_list, mode = mode)
             print_log(f"{eval_log_av}\n")
             if self.rank == 0:
-                self.plot_test(0, results['preds'][-1], results['labels'][-1], mode,
+                self.plot_test(0, results['preds'][-1,0], results['labels'][-1,0], mode,
                                min_max_delt=min_max_delt)
         else:
             for t in range(self.args.data_after_num):

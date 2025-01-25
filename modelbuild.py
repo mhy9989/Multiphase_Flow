@@ -30,7 +30,7 @@ class modelbuild():
         self.init_lossfun()
         self.method = method_maps[self.args.method.lower()](self.args, self.ds_config, self.base_criterion)
         network = f"The neural network is created. Network type: {self.args.method.lower()}"
-        print_log(network)
+        print_log(network, self.args.init)
         self.init_optimizer()
         self.args.by_epoch = self.method.by_epoch
         self.method.model.eval()
@@ -43,17 +43,17 @@ class modelbuild():
         """Create optimizer and scheduler."""
         (self.method.optimizer, self.method.scheduler, self.method.by_epoch) \
             = get_optim_scheduler(self.args, self.args.max_epoch, self.method.model, self.args.steps_per_epoch)
-        print_log(f"The optimizer is created. Optimizer type: {self.args.optim}")
-        print_log(f"The scheduler is created. Scheduler type: {self.args.sched}")
+        print_log(f"The optimizer is created. Optimizer type: {self.args.optim}",self.args.init)
+        print_log(f"The scheduler is created. Scheduler type: {self.args.sched}",self.args.init)
     
 
     def init_lossfun(self):
         """Setup base lossfun"""
         self.base_criterion = getattr(lossfun, self.args.lossfun)
-        print_log(f"The base criterion is created. Base criterion type: {self.args.lossfun}")
+        print_log(f"The base criterion is created. Base criterion type: {self.args.lossfun}",self.args.init)
 
 
-    def init_logging(self,init):
+    def init_logging(self, init):
         if init:
             for handler in logging.root.handlers[:]:
                 logging.root.removeHandler(handler)
@@ -73,30 +73,32 @@ class modelbuild():
             self.init_logging(init)
             if torch.cuda.is_available():
                 args.device = torch.device("cuda:0")
-                print_log(f'Use non-distributed mode with GPU: {args.device}')
+                print_log(f'Use non-distributed mode with GPU: {args.device}',init)
             else:
                 args.device = torch.device("cpu")
-                print_log(f'Use CPU')
+                print_log(f'Use CPU',init)
             args.rank = 0
             args.world_size = 1
             args.dist = False
         else:
-            torch.cuda.set_device(args.local_rank)
             args.device = torch.device("cuda", args.local_rank)
-            # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
-            deepspeed.init_distributed()
+            if init:
+                torch.cuda.set_device(args.local_rank)
+                # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
+                deepspeed.init_distributed()
             args.rank, args.world_size = get_dist_info()
             args.dist = True
             if args.rank == 0:
                 self.init_logging(init)
-            print_log(f'Use distributed mode with GPUs, world_size: {args.world_size}')
+            print_log(f'Use distributed mode with GPUs, world_size: {args.world_size}',init)
         
-        if args.dist:
-            seed = init_random_seed(args.seed)
-            seed = seed + dist.get_rank() if args.diff_seed else seed
-        else:
-            seed = args.seed
-        set_seed(seed)
+        if init:
+            if args.dist:
+                seed = init_random_seed(args.seed)
+                seed = seed + dist.get_rank() if args.diff_seed else seed
+            else:
+                seed = args.seed
+            set_seed(seed)
         return args
 
 
@@ -114,6 +116,7 @@ class modelbuild():
         for key in list(args.keys()):
             args.update(args[key])
 
+        args.init = init
         args.local_rank = ds_args.local_rank
         args.data_shape = [args.data_height, args.data_width]
         args.q = int(np.sqrt(args.latent_dim))
@@ -127,7 +130,7 @@ class modelbuild():
         args.batch_size = args.per_device_train_batch_size * args.world_size
         args.data_after_num = len(args.data_after)
 
-        if args.model_type == "AE":
+        if args.model_type in ["AE", "AE_Conv"]:
             trainlen = int((1 - args.valid_ratio) * int(args.data_num * (args.data_after_num+1)))#- args.test_num))
         elif  args.model_type == "DON":
             trainlen = int((1 - args.valid_ratio) * int(args.data_num))#- args.test_num))

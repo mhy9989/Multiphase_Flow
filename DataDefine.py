@@ -1,7 +1,7 @@
 import numpy as np
 from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, PowerTransformer
-from utils import print_log
+from utils import print_log, NoneScaler
 import torch
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, random_split, Subset
@@ -11,17 +11,16 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 def get_datloader(args, mode = "train", infer_num = [-1]):
     """Generate dataloader"""
-    if args.model_type == "AE":
+    orgs_data=None
+    if args.model_type in ["AE","AE_Conv"]:
         dataset = AE_Dataset(args)
     elif  args.model_type in ["DON", "EN_DON"]:
         dataset = DON_Dataset(args)
+        orgs_data = dataset.orgs[-args.test_num:]
     else:
         dataset = CFD_Dataset(args)
     data_scaler = dataset.scaler if dataset.scaler else None
 
-    orgs_data=None
-    if args.model_type == "DON":
-        orgs_data = dataset.orgs[-args.test_num:]
 
     if mode == "inference":
         inference_dataset = Subset(dataset, infer_num) # B, T, H, W
@@ -57,12 +56,13 @@ def get_datloader(args, mode = "train", infer_num = [-1]):
         train_dataset = train_valid_dataset
         valid_dataset = test_dataset
 
-    print_log(f"Length of all dataset: {len(dataset)}")
-    print_log(f"Length of train_dataset: {len(train_dataset)}")
-    print_log(f"Length of valid_dataset: {len(valid_dataset)}")
-    print_log(f"Length of test_dataset: {len(test_dataset)}")
-    print_log(f"Shape of input_data: {test_dataset[0][0].shape}")
-    print_log(f"Shape of label_data: {test_dataset[0][1].shape}")
+    if args.init:
+        print_log(f"Length of all dataset: {len(dataset)}")
+        print_log(f"Length of train_dataset: {len(train_dataset)}")
+        print_log(f"Length of valid_dataset: {len(valid_dataset)}")
+        print_log(f"Length of test_dataset: {len(test_dataset)}")
+        print_log(f"Shape of input_data: {test_dataset[0][0].shape}")
+        print_log(f"Shape of label_data: {test_dataset[0][1].shape}")
 
     # DataLoaders creation:
     if not args.dist:
@@ -125,16 +125,6 @@ def get_scaler(args, num):
         raise EOFError
     return scaler
 
-
-class NoneScaler():
-    def __init__(self):
-        return
-
-    def transform(self, data):
-        return data
-    
-    def inverse_transform(self, data):
-        return data
 
 
 class CFD_Dataset(Dataset):
@@ -214,7 +204,7 @@ class AE_Dataset(Dataset):
         label_data = data_matrix
         label_data = label_data.reshape(self.data_num * (self.data_after_num+1), -1)
         label_data = self.scaler[-1].transform(label_data)
-        label_data = label_data.reshape(-1, self.height, self.width)
+        label_data = label_data.reshape(-1, 1, self.height, self.width)
         
         self.data_matrix = label_data # (num * data_time, height, width)
 

@@ -5,7 +5,6 @@ from core import metric
 import deepspeed
 from utils import gather_tensors_batch, get_progress
 
-
 class Base_method(object):
     """Base Method.
 

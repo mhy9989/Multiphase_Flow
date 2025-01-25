@@ -36,9 +36,10 @@ class BasicConv2d(nn.Module):
             self.conv = nn.Conv2d(
                 in_channels, out_channels, kernel_size=kernel_size,
                 stride=stride, padding=padding, dilation=dilation)
-
-        self.norm = nn.GroupNorm(2, out_channels)
-        self.act = nn.SiLU(inplace=act_inplace)
+        
+        if self.act_norm:
+            self.norm = nn.GroupNorm(2, out_channels)
+            self.act = nn.SiLU(inplace=act_inplace)
 
         self.apply(self._init_weights)
 

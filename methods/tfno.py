@@ -1,11 +1,5 @@
-import time
-import torch
-from timm.utils import AverageMeter
-
-from utils import reduce_tensor, get_progress
 from .sao import SAO
 from models import TFNO_Model
-from core.lossfun import Regularization
 
 class TFNO(SAO):
 
