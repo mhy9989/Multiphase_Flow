@@ -7,7 +7,7 @@
     "gradient_accumulation_steps": 1,
     "num_workers": 12,
     "method": "l-deeponet",
-    "max_epoch": 2,
+    "max_epoch": 1000,
     "lossfun": "MSE",
     "load_from": false,
     "if_continue": false,
@@ -19,21 +19,22 @@
     "fps": true
   },
   "data_config": {
-    "org_path": "/root/MPF/data-pre/fluidisedBed/data-u0.1/dataset.npy",
+    "org_path": "./dataset.npy",
     "input_path": "./Model/L_DeepONet-EN_DON-gelu/data/EN_inputs.npy",
     "lam_path": "./Model/L_DeepONet-EN_DON-gelu/data/AE_lam.npy",
-    "mesh_path": "/root/MPF/data-pre/fluidisedBed/data-u0.1/mesh.npy",
+    "mesh_path": "./mesh.npy",
     "data_num": 1001,
     "data_width": 128,
     "data_height": 128,
-    "data_mean": [0.5136139,0.24966112691709627,1.4614624],
-    "data_std": [1.174086,0.2365436231809009,2.3267715],
-    "data_max": [7.619022,0.5958204334153253,19.228542],
-    "data_min": [-0.16997123,0,-0.16997123],
+    "data_mean": [0.5, 0.5, 0.5],
+    "data_std": [1, 1, 1],
+    "data_max": [1, 1, 1],
+    "data_min": [0, 0, 0],
     "data_scaler": ["Standard", "Standard","Standard"],
-    "data_after": [1,2,3,4,5,6],
+    "data_after": [1,2,3,4,5,6,7,8,9,10],
     "valid_ratio": 0.0,
-    "test_num": 1
+    "test_ratio": 0.1,
+    "dt": 0.1
   },
   "optim_config": {
     "optim": "Adam",
@@ -55,17 +56,17 @@
   },
   "model_config": {
     "model_type": "EN_DON",
-    "latent_dim": 1024,
+    "latent_dim": 144,
 
-    "EN_layers": [1024, 1024, 1024, 1024],
+    "EN_layers": [5016, 1536, 470, 144],
 
-    "branch_channels":[128, 64, 32, 32, 32, 32],
+    "branch_channels":[64, 32, 32, 16, 16, 16],
     "kernel_size": 3,
     "stride": 1,
     "act_norm": "Batch",
     "branch_actfun": "gelu",
 
-    "trunk_layers":[1024,1024,1024,1024],
+    "trunk_layers":[288, 288, 288, 288],
     "trunk_actfun": "gelu",
 
     "p": 8

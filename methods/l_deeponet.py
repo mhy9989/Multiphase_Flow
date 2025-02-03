@@ -14,7 +14,7 @@ class L_DeepONet(SAO):
         self.m = args.latent_dim
         self.args = args
         self.torch_scaler = None
-        X_loc = np.array([i*0.1 for i in args.data_after]).reshape(args.data_after_num, 1)
+        X_loc = np.array([i * args.dt for i in args.data_after]).reshape(args.data_after_num, 1)
         self.x1 = torch.Tensor((X_loc-X_loc.mean())/X_loc.std()).to(self.device) if args.data_after_num != 1 else torch.Tensor(X_loc).to(self.device)
 
     def build_model(self, args):

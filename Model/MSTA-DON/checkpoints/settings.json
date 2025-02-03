@@ -2,8 +2,8 @@
   "setup_config":{
     "seed": 199989,
     "diff_seed": false,
-    "per_device_train_batch_size": 16,
-    "per_device_valid_batch_size": 16,
+    "per_device_train_batch_size": 8,
+    "per_device_valid_batch_size": 8,
     "gradient_accumulation_steps": 1,
     "num_workers": 12,
     "method": "MSTA",
@@ -19,21 +19,22 @@
     "fps": true
   },
   "data_config": {
-    "org_path": "/root/MPF/data-pre/fluidisedBed/data_air/dataset.npy",
+    "org_path": "./dataset.npy",
     "input_path": "/root/ML/nc/Model/MSTA-DON/data/AE_inputs.npy",
     "lam_path": "/root/ML/nc/Model/MSTA-DON/data/AE_lam.npy",
-    "mesh_path": "/root/MPF/data-pre/fluidisedBed/data_air/mesh.npy",
-    "data_num": 1001,
+    "mesh_path": "./mesh.npy",
+    "data_num": 1000,
     "data_width": 128,
     "data_height": 128,
-    "data_mean": [0.04043254,0.24966112691709627,0.07154969],
-    "data_std": [0.5300521,0.2365436231809009,0.66031325],
-    "data_max": [14.914929,0.5958204334153253,19.28413],
-    "data_min": [-0.1699712,0,-0.16997121],
-    "data_scaler": ["Standard", "MinMax","Standard"],
-    "data_after": 6,
+    "data_mean": [0.5, 0.5, 0.5],
+    "data_std": [1, 1, 1],
+    "data_max": [1, 1, 1],
+    "data_min": [0, 0, 0],
+    "data_scaler": ["Standard", "Standard","Standard"],
+    "data_after": [1,2,3,4,5,6,7,8,9,10],
     "valid_ratio": 0.0,
-    "test_num": 1
+    "test_ratio": 0.1,
+    "dt": 0.1
   },
   "optim_config": {
     "optim": "Adamw",
@@ -63,7 +64,7 @@
     "spatio_kernel_enc": 3,
     "spatio_kernel_dec": 3,
     "drop_path":0.1,
-    "latent_dim": 1024
+    "latent_dim": 144
   },
   "ds_config":{
     "offload": false,
