@@ -4,26 +4,29 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, PowerTransformer
 from utils import print_log, NoneScaler
 import torch
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, random_split, Subset
+from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, random_split, Subset, ConcatDataset
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 def get_datloader(args, mode = "train", infer_num = [-1]):
     """Generate dataloader"""
-    orgs_data=None
+    last_num = args.data_after_num + 1
     if args.model_type in ["AE","AE_Conv"]:
         dataset = AE_Dataset(args)
     elif  args.model_type in ["DON", "EN_DON"]:
         dataset = DON_Dataset(args)
-        orgs_data = dataset.orgs[-args.test_num:]
+        last_num = 1
     else:
         dataset = CFD_Dataset(args)
     data_scaler = dataset.scaler if dataset.scaler else None
 
-
     if mode == "inference":
         inference_dataset = Subset(dataset, infer_num) # B, T, H, W
+        try:
+            orgs_data = dataset.orgs[infer_num]
+        except:
+            orgs_data = None
         infer_loader = DataLoader(inference_dataset,
                                 num_workers=args.num_workers,
                                 batch_size=args.per_device_valid_batch_size,
@@ -35,26 +38,36 @@ def get_datloader(args, mode = "train", infer_num = [-1]):
         print_log(f"Shape of label_data: {inference_dataset[0][1].shape}")
         return infer_loader, data_scaler, dataset.x_mesh, dataset.y_mesh, orgs_data
     
-
     # Split dataset into training dataset, validation dataset and test_dataset
     indices = list(range(len(dataset)))
 
-    if args.test_num > len(dataset) -1:
-        print_log(f"Too many test_num choose!")
+    if (args.test_ratio > 1) or (args.test_ratio < 0):
+        print_log(f"Errot test_ratio!")
         raise EOFError
 
-    indices_train_valid = indices#[:-args.test_num]
-    indices_test = indices[-args.test_num:]
+    dataset_rm_last = Subset(dataset, indices[:-last_num])
+    last_data_dataset = Subset(dataset, indices[-last_num:])
 
-    train_valid_dataset = Subset(dataset, indices_train_valid)
-    test_dataset = Subset(dataset, indices_test)
+    testlen = int(args.test_ratio * len(dataset)) - last_num 
+    validlen = int(args.valid_ratio * len(dataset))
+    trainlen = len(dataset_rm_last) - testlen - validlen
+
     if args.valid_ratio > 0:
-        trainlen = int((1 - args.valid_ratio) * len(train_valid_dataset))
-        lengths = [trainlen, len(train_valid_dataset) - trainlen]
-        train_dataset, valid_dataset = random_split(train_valid_dataset, lengths)
+        lengths = [trainlen, validlen, testlen]
+        train_dataset, valid_dataset, test_dataset = random_split(dataset_rm_last, lengths)
+        test_indices = test_dataset.indices + indices[-last_num:]
+        test_dataset = ConcatDataset([test_dataset, last_data_dataset])
     else:
-        train_dataset = train_valid_dataset
+        lengths = [trainlen, testlen]
+        train_dataset, test_dataset = random_split(dataset_rm_last, lengths)
+        test_indices = test_dataset.indices + indices[-last_num:]
+        test_dataset = ConcatDataset([test_dataset, last_data_dataset])
         valid_dataset = test_dataset
+
+    try:
+        orgs_data = dataset.orgs[test_indices]
+    except:
+        orgs_data = None
 
     if args.init:
         print_log(f"Length of all dataset: {len(dataset)}")

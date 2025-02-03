@@ -5,8 +5,8 @@ from modules import ConvSC, DeepConv2d
 
 class L_DeepONet_Model_AE_DON(nn.Module):
     def __init__(self, input_shape, p, latent_dim, q, branch_channels, trunk_layers, AE_layers,
-                 stride=1, kernel_size=3, act_norm="Batch", AE_actfun="gelu",
-                 branch_actfun="gelu", trunk_actfun="gelu", **kwargs):
+                 stride=1, kernel_size=3, act_norm="Batch", AE_actfun="silu",
+                 branch_actfun="silu", trunk_actfun="silu", **kwargs):
         super(L_DeepONet_Model_AE_DON, self).__init__()
         self.m = latent_dim
         self.q = q
@@ -35,8 +35,8 @@ class L_DeepONet_Model_AE_DON(nn.Module):
 
 class L_DeepONet_Model_EN_DON(nn.Module):
     def __init__(self, input_shape, p, latent_dim, q, branch_channels, trunk_layers, EN_layers,
-                 stride=1, kernel_size=3, act_norm="Batch", AE_actfun="gelu",
-                 branch_actfun="gelu", trunk_actfun="gelu", **kwargs):
+                 stride=1, kernel_size=3, act_norm="Batch", AE_actfun="silu",
+                 branch_actfun="silu", trunk_actfun="silu", **kwargs):
         super(L_DeepONet_Model_EN_DON, self).__init__()
         self.m = latent_dim
         self.q = q
@@ -62,7 +62,7 @@ class L_DeepONet_Model_EN_DON(nn.Module):
 class L_DeepONet_Model_DON(nn.Module):
     def __init__(self, p, latent_dim, branch_channels, trunk_layers, 
                  stride=1, kernel_size=3, act_norm="Batch", 
-                 branch_actfun="gelu", trunk_actfun="gelu", **kwargs):
+                 branch_actfun="silu", trunk_actfun="silu", **kwargs):
         super(L_DeepONet_Model_DON, self).__init__()
         self.m = latent_dim
         self.branch = Branch(p, latent_dim, branch_channels, stride, 
@@ -80,7 +80,7 @@ class L_DeepONet_Model_DON(nn.Module):
 
 
 class L_DeepONet_Model_AE(nn.Module):
-    def __init__(self, input_shape, AE_layers, actfun="gelu", **kwargs):
+    def __init__(self, input_shape, AE_layers, actfun="silu", **kwargs):
         super(L_DeepONet_Model_AE, self).__init__()
         H, W = input_shape
         self.encoder = Encoder_Linear(H, W, AE_layers, act_list[actfun.lower()])
@@ -93,17 +93,33 @@ class L_DeepONet_Model_AE(nn.Module):
 
 
 class L_DeepONet_Model_AE_Conv(nn.Module):
-    def __init__(self, input_shape, AE_channels, spatio_kernel=3, 
-                if_mid=True, act_inplace = False,**kwargs):
+    def __init__(self, input_shape, AE_channels, latent_dim, actfun="silu",
+                 spatio_kernel=3, if_mid=True, act_inplace = False,**kwargs):
         super(L_DeepONet_Model_AE_Conv, self).__init__()
         H, W = input_shape
+        act = act_list[actfun.lower()]
         self.encoder = Encoder_Conv(AE_channels, spatio_kernel,if_mid,act_inplace)
+
+        if if_mid:
+            samplings_size = 2 **(len(AE_channels)// 2)
+        else:
+            samplings_size = 2 ** len(AE_channels)
+        
+        H_m, W_m = H // samplings_size, W // samplings_size
+
+        self.latent = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(H_m * W_m * AE_channels[-1], latent_dim), act,
+            nn.Linear(latent_dim, H_m * W_m * AE_channels[-1]), act,
+            nn.Unflatten(1, (AE_channels[-1], H_m, W_m))
+        )
         
         self.decoder = Decoder_Conv(AE_channels, spatio_kernel,if_mid,act_inplace)
 
     def forward(self, x, **kwargs):
         encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
+        latent = self.latent(encoded)
+        decoded = self.decoder(latent)
         return decoded
 
 
@@ -155,7 +171,7 @@ class Decoder_Conv(nn.Module):
 class Encoder_Linear(nn.Module):
     """Encoder of Linear AE"""
 
-    def __init__(self, H:int, W:int, AE_layers:list, actfun=nn.gelu()):
+    def __init__(self, H:int, W:int, AE_layers:list, actfun=nn.SiLU()):
         super(Encoder_Linear, self).__init__()
         N_E = len(AE_layers)
         self.encoder = nn.Sequential(
@@ -173,7 +189,7 @@ class Encoder_Linear(nn.Module):
 class Decoder_Linear(nn.Module):
     """Decoder of Linear AE"""
 
-    def __init__(self, H:int, W:int, AE_layers:list, actfun=nn.gelu()):
+    def __init__(self, H:int, W:int, AE_layers:list, actfun=nn.SiLU()):
         super(Decoder_Linear, self).__init__()
         N_D = len(AE_layers)
         self.decoder = nn.Sequential(
@@ -194,7 +210,7 @@ class Branch(nn.Module):
 
     def __init__(self, p:int, latent_dim:int, channels:list, stride=1, 
                  kernel_size=3, act_norm="Batch",
-                 actfun=nn.gelu()):
+                 actfun=nn.SiLU()):
         super(Branch, self).__init__()
         self.channel_len = len(channels)
         padding = (kernel_size - stride + 1) // 2
@@ -218,7 +234,7 @@ class Trunk(nn.Module):
     """Trunk"""
 
     def __init__(self, p:int, latent_dim:int, layers:list,
-                 actfun=nn.gelu()):
+                 actfun=nn.SiLU()):
         super(Trunk, self).__init__()
         self.trunk = nn.Sequential(
                 nn.Linear(1, layers[0]), actfun,

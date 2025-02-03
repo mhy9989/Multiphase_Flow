@@ -4,6 +4,7 @@ import os
 import argparse
 import deepspeed
 
+
 def add_argument():
     parser = argparse.ArgumentParser(description='CFD-CNN')
     parser.add_argument('--local_rank',
@@ -14,9 +15,10 @@ def add_argument():
     args = parser.parse_args()
     return args
 
+
 def main():
     ## model name
-    modelname = 'L_DeepONet-AE-lr-std-1e-4'
+    modelname = 'L_DeepONet-AE'
     ## model path
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -27,8 +29,6 @@ def main():
     model = modeltrain(model_data, model_path)
     model.train()
     model.test_inference()
-
-
 
 
 if __name__ == '__main__':

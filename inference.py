@@ -17,9 +17,9 @@ def add_argument():
 
 def main():
     ## model name
-    modelname = 'L_DeepONet-AE-lr-std-1e-4'
+    modelname = 'L_DeepONet-AE'
     mode = "inference"
-    tt_num = 11*1001
+    tt_num = 11*1000
     infer_num = range(tt_num)
     #infer_num = range(1001) #range(-50,-10)
     min_max_delt=None

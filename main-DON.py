@@ -1,10 +1,10 @@
 from modeltrain import modeltrain
 from modelbuild import modelbuild
-import os
 import argparse
 import deepspeed
 import os.path as osp
 import torch
+
 
 def add_argument():
     parser = argparse.ArgumentParser(description='CFD-CNN')
@@ -16,22 +16,22 @@ def add_argument():
     args = parser.parse_args()
     return args
 
+
 def main():
     ## model name
     modelnameDON = 'L_DeepONet-EN_DON-gelu'
     modelnameAE = 'L_DeepONet-AE'
     ## model path
-    dir_path = os.path.dirname(os.path.abspath(__file__))
+    dir_path = osp.dirname(osp.abspath(__file__))
 
     ds_args = add_argument()
 
-    model_pathDON = os.path.join(dir_path, 'Model', f'{modelnameDON}')
+    model_pathDON = osp.join(dir_path, 'Model', f'{modelnameDON}')
     total_dataDON = modelbuild(model_pathDON, ds_args)
     model_dataDON = total_dataDON.get_data()
     modelDON = modeltrain(model_dataDON, model_pathDON)
-    
 
-    model_pathAE = os.path.join(dir_path, 'Model', f'{modelnameAE}')
+    model_pathAE = osp.join(dir_path, 'Model', f'{modelnameAE}')
     total_dataAE = modelbuild(model_pathAE, ds_args, init=False)
     model_dataAE = total_dataAE.get_data()
     modelAE = modeltrain(model_dataAE, model_pathAE)
@@ -44,8 +44,6 @@ def main():
     modelDON.train()
 
     modelDON.test_inference_n()
-
-
 
 
 if __name__ == '__main__':

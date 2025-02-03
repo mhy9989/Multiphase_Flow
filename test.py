@@ -16,7 +16,8 @@ def add_argument():
 
 def main():
     ## model name
-    modelname = 'L_DeepONet-AE-28*28'
+    modelname = 'L_DeepONet-AE'
+
     ## model path
     dir_path = os.path.dirname(os.path.abspath(__file__))
     min_max_delt = None

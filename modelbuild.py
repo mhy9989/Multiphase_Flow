@@ -53,7 +53,7 @@ class modelbuild():
         print_log(f"The base criterion is created. Base criterion type: {self.args.lossfun}",self.args.init)
 
 
-    def init_logging(self, init):
+    def init_logging(self,init):
         if init:
             for handler in logging.root.handlers[:]:
                 logging.root.removeHandler(handler)
@@ -121,6 +121,7 @@ class modelbuild():
         args.data_shape = [args.data_height, args.data_width]
         args.q = int(np.sqrt(args.latent_dim))
         args.DON_shape = [args.q, args.q]
+        
         if args.model_type == "DON":
             args.input_shape = args.DON_shape
         else:
@@ -131,11 +132,11 @@ class modelbuild():
         args.data_after_num = len(args.data_after)
 
         if args.model_type in ["AE", "AE_Conv"]:
-            trainlen = int((1 - args.valid_ratio) * int(args.data_num * (args.data_after_num+1)))#- args.test_num))
+            trainlen = int((1 - args.valid_ratio - args.test_ratio) * args.data_num * (args.data_after_num+1))
         elif  args.model_type == "DON":
-            trainlen = int((1 - args.valid_ratio) * int(args.data_num))#- args.test_num))
+            trainlen = int((1 - args.valid_ratio - args.test_ratio) * args.data_num)
         else:
-            trainlen = int((1 - args.valid_ratio) * int(args.data_num))#- args.test_num))
+            trainlen = int((1 - args.valid_ratio - args.test_ratio) * args.data_num)
 
         args.steps_per_epoch = math.ceil(trainlen/args.world_size/args.per_device_train_batch_size)
         ds_steps_per_print = args.max_epoch * args.steps_per_epoch + 1 # close ds step per print

@@ -42,7 +42,6 @@ class modeltrain(object):
                 self.display_method_info()
 
 
-
     def preparation(self):
         """Preparation of basic experiment setups"""
         if self.early_stop <= self.max_epochs // 5:
@@ -55,7 +54,8 @@ class modeltrain(object):
                 self.args.load_from = 'latest'
             self.load(name=self.args.load_from)
         # prepare data
-        self.get_data()
+        if self.args.init:
+            self.get_data()
 
 
     def get_data(self):
@@ -129,6 +129,7 @@ class modeltrain(object):
                 self.method.model.load_state_dict(state_dict)
         else:
             self.method.model.load_state_dict(state_dict)
+        self.method.model.eval()
         print_log(f"Successful load model state_dict")
 
     def display_method_info(self):
@@ -289,13 +290,13 @@ class modeltrain(object):
         # Computed
         self.test_unit(resultsn,metric_list,"Computed",min_max_delt)
 
+        # Original
         if self.args.model_type in ["DON", "EN_DON"]:
             num = 1
         else:
             num = -1
-        # Original
         if self.scaler[num]:
-            resultsn = self.de_norm(resultsn, self.scaler[1])
+            resultsn = self.de_norm(resultsn, self.scaler[num])
             resultsn["inputs"] = inputs_org
             self.test_unit(resultsn,metric_list,"Original",min_max_delt)
         return 
