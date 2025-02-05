@@ -120,6 +120,7 @@ class Base_method(object):
                                         scaler = self.scaler[-1],
                                         metrics=self.metric_list, return_log=False)
                     eval_res['loss'] = self.cal_loss(pred_y, batch_y).cpu().numpy()
+                    eval_res['num'] = np.array(pred_y.shape[0])
                     for k in eval_res.keys():
                         eval_res[k] = eval_res[k].reshape(1)
                     results.append(eval_res)
@@ -175,6 +176,7 @@ class Base_method(object):
                                         scaler = self.scaler[-1],
                                         metrics=self.metric_list, return_log=False)
                     eval_res['loss'] = self.cal_loss(pred_y, batch_y).cpu().numpy()
+                    eval_res['num'] = np.array(pred_y.shape[0])
                     for k in eval_res.keys():
                         eval_res[k] = eval_res[k].reshape(1)
                     results.append(eval_res)
@@ -206,10 +208,12 @@ class Base_method(object):
             results = self.nondist_forward_collect(vali_loader, len(vali_loader.dataset), gather_data=False, mode="Validation...")
 
         eval_log = ""
+        t_num = np.sum(results['num'])
         for k, v in results.items():
-            v = v.mean()
-            if k != "loss":
-                eval_str = f"{k}: {v.mean():.5e}" if len(eval_log) == 0 else f", {k}: {v.mean():.5e}"
+            if k != "num":
+                v = results[k] = np.sum(v * results['num']) / t_num
+            if k not in ["loss","num"]:
+                eval_str = f"{k}: {v:.5e}" if len(eval_log) == 0 else f", {k}: {v:.5e}"
                 eval_log += eval_str
 
         return results, eval_log

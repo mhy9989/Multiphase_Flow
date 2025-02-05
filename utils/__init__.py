@@ -14,6 +14,6 @@ __all__ = [
     'dist_forward_collect', 'collect_results_gpu','get_train_ds_config','default_parser',
     'get_progress','plot_figure', 'plot_learning_curve',
     'torch_StandardScaler', 'torch_MinMaxScaler', 'NoneScaler',
-    'get_torch_scalerm
+    'get_torch_scaler'
 
 ]
