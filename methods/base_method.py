@@ -114,9 +114,12 @@ class Base_method(object):
 
                 if gather_data:  # return raw datas
                     results.append(dict(zip(['inputs', 'preds', 'labels'],
-                                            [batch_x.cpu().numpy(), pred_y.cpu().numpy(), batch_y.cpu().numpy()])))
+                                            [batch_x.cpu().numpy().astype(np.float64), 
+                                             pred_y.cpu().numpy().astype(np.float64), 
+                                             batch_y.cpu().numpy().astype(np.float64)])))
                 else:  # return metrics
-                    eval_res, _ = metric(pred_y.cpu().numpy(), batch_y.cpu().numpy(),
+                    eval_res, _ = metric(pred_y.cpu().numpy().astype(np.float64), 
+                                         batch_y.cpu().numpy().astype(np.float64),
                                         scaler = self.scaler[-1],
                                         metrics=self.metric_list, return_log=False)
                     eval_res['loss'] = self.cal_loss(pred_y, batch_y).cpu().numpy()
@@ -170,9 +173,12 @@ class Base_method(object):
 
                 if gather_data:  # return raw datas
                     results.append(dict(zip(['inputs', 'preds', 'labels'],
-                                            [batch_x.cpu().numpy(), pred_y.cpu().numpy(), batch_y.cpu().numpy()])))
+                                            [batch_x.cpu().numpy().astype(np.float64), 
+                                             pred_y.cpu().numpy().astype(np.float64),
+                                             batch_y.cpu().numpy().astype(np.float64)])))
                 else:  # return metrics
-                    eval_res, _ = metric(pred_y.cpu().numpy(), batch_y.cpu().numpy(),
+                    eval_res, _ = metric(pred_y.cpu().numpy().astype(np.float64), 
+                                         batch_y.cpu().numpy().astype(np.float64),
                                         scaler = self.scaler[-1],
                                         metrics=self.metric_list, return_log=False)
                     eval_res['loss'] = self.cal_loss(pred_y, batch_y).cpu().numpy()
