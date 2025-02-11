@@ -1,6 +1,6 @@
 import numpy as np
 from torch.utils.data import Dataset
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, PowerTransformer
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from utils import print_log, NoneScaler
 import torch
 from torch.utils.data.distributed import DistributedSampler
@@ -131,8 +131,6 @@ def get_scaler(args, num):
         scaler.min_= custom_min - args.data_min[num] * scale
     elif args.data_scaler[num] == "None":
         scaler = NoneScaler()
-    elif args.data_scaler[num] == "BCT":
-        scaler = PowerTransformer()
     else:
         print_log(f"Error data_scaler type: {args.data_scaler[num]}")
         raise EOFError
@@ -163,8 +161,6 @@ class CFD_Dataset(Dataset):
 
         #inputs (num, H, W)
         inputs = inputs.reshape(-1, self.height * self.width)
-        if args.data_scaler[0] == "BCT":
-            self.scaler[0].fit(inputs)
         inputs = self.scaler[0].transform(inputs)
 
         #inputs (num, 1, H, W)
@@ -173,8 +169,6 @@ class CFD_Dataset(Dataset):
 
         #labels (num, after, H, W)
         labels = labels.reshape(-1, self.height * self.width)
-        if args.data_scaler[1] == "BCT":
-            self.scaler[1].fit(labels)
         labels = self.scaler[1].transform(labels)
 
         self.labels = labels.reshape(self.data_num, self.data_after_num, self.height, self.width)
@@ -261,8 +255,6 @@ class DON_Dataset(Dataset):
 
         #inputs (num, lam) or (num, H, W) 
         inputs = inputs.reshape(self.data_num, -1)
-        if args.data_scaler[0] == "BCT":
-            self.scaler[0].fit(inputs)
         self.inputs = self.scaler[0].transform(inputs)
 
         #inputs (num, 1, q, q) or (num, 1, H, W)
@@ -270,8 +262,6 @@ class DON_Dataset(Dataset):
 
         #labels (num, after, lam)
         lams = lams.reshape(self.data_num * self.data_after_num, self.latent_dim)
-        if args.data_scaler[2] == "BCT":
-            self.scaler[2].fit(lams)
         lams = self.scaler[2].transform(lams)
         self.labels = lams.reshape(self.data_num, self.data_after_num, self.latent_dim)
 
